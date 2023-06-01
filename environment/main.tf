@@ -9,13 +9,16 @@ resource "azurerm_virtual_network" "env_vnet" {
   name                = local.vnet_name
   location            = azurerm_resource_group.env_rg.location
   resource_group_name = azurerm_resource_group.env_rg.name
-  address_space       = ["10.0.0.0/27"]
-
-  subnet {
-    name           = "aks_subnet"
-    address_prefix = "10.0.0.0/28"
-  }
+  address_space       = ["192.168.0.0/27"]
 }
+
+resource "azurerm_subnet" "aks_subnet" {
+  name                 = "aks_subnet"
+  virtual_network_name = azurerm_virtual_network.env_vnet.name
+  resource_group_name  = azurerm_resource_group.env_rg.name
+  address_prefixes     = ["192.168.0.0/28"]
+}
+
 
 # add DNS subdomain to barbart.shikki.ro
 resource "azurerm_dns_zone" "env_dns" {
@@ -44,11 +47,22 @@ resource "azurerm_kubernetes_cluster" "env_aks" {
     name       = "default"
     node_count = 1
     vm_size    = "Standard_D2_v2"
+    vnet_subnet_id = azurerm_subnet.aks_subnet.id
   }
 
   identity {
     type = "SystemAssigned"
   }
+
+  provisioner "local-exec" {
+    command = "az aks get-credentials --name ${self.name} --resource-group ${azurerm_resource_group.env_rg.name} --admin --overwrite-existing"
+  }
+}
+
+resource "azurerm_role_assignment" "aks_to_rg" {
+  scope                = azurerm_resource_group.env_rg.id
+  role_definition_name = "Network Contributor"
+  principal_id         = azurerm_kubernetes_cluster.env_aks.identity[0].principal_id
 }
 
 # pip
@@ -57,6 +71,7 @@ resource "azurerm_public_ip" "example" {
   location            = azurerm_resource_group.env_rg.location
   resource_group_name = azurerm_resource_group.env_rg.name
   allocation_method   = "Static"
+  sku                 = "Standard"
 }
 
 # mysql server/db
@@ -87,4 +102,16 @@ resource "azurerm_mysql_database" "example" {
   server_name         = azurerm_mysql_server.env_mysql_srv.name
   charset             = "utf8"
   collation           = "utf8_unicode_ci"
+}
+
+resource null_resource "ingress_values" {
+  provisioner "local-exec" {
+    command = "D:\\_playground\\path2DevOps_IaC\\environment\\Get-Values.ps1 -pip ${azurerm_public_ip.example.ip_address} -rg ${azurerm_resource_group.env_rg.name}"
+    interpreter = ["PowerShell"]
+  }
+
+  depends_on = [ 
+    azurerm_public_ip.example,
+    azurerm_resource_group.env_rg
+  ]
 }
