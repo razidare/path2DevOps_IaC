@@ -10,6 +10,12 @@ resource "kubernetes_namespace" "networking" {
   }
 }
 
+resource "kubernetes_namespace" "cert_manager" {
+  metadata {
+    name = "cert-manager"
+  }
+}
+
 resource "helm_release" "nginx_ingress" {
   name       = "nginx-ingress-controller"
   namespace  = "networking"
@@ -18,7 +24,7 @@ resource "helm_release" "nginx_ingress" {
   chart      = "ingress-nginx"
 
   values = [
-    "${file("values.yaml")}"
+    "${file("values_ingress_controller.yaml")}"
   ]
 
   # set {
@@ -30,4 +36,32 @@ resource "helm_release" "nginx_ingress" {
     null_resource.update_helm,
     kubernetes_namespace.networking
   ]
+}
+
+resource "helm_release" "cert_manager" {
+  name       = "cert-manager"
+  namespace  = "cert-manager"
+
+  repository = "https://charts.jetstack.io"
+  chart      = "cert-manager"
+
+  values = [
+    "${file("values_cert_manager.yaml")}"
+  ]
+
+  set {
+    name  = "installCRDs"
+    value = "true"
+  }
+  
+  depends_on = [
+    null_resource.update_helm,
+    kubernetes_namespace.cert_manager
+  ]
+}
+
+resource "null_resource" "cluster_issuer" {
+  provisioner "local-exec" {
+    command = "kubectl apply -f cluster_issuer.yaml"
+  }
 }

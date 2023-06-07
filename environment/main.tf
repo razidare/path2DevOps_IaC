@@ -57,6 +57,13 @@ resource "azurerm_kubernetes_cluster" "env_aks" {
   provisioner "local-exec" {
     command = "az aks get-credentials --name ${self.name} --resource-group ${azurerm_resource_group.env_rg.name} --admin --overwrite-existing"
   }
+
+  lifecycle {
+    ignore_changes = [ 
+      oidc_issuer_enabled,
+      workload_identity_enabled 
+      ]
+  }
 }
 
 resource "azurerm_role_assignment" "aks_to_rg" {
@@ -106,12 +113,30 @@ resource "azurerm_mysql_database" "example" {
 
 resource null_resource "ingress_values" {
   provisioner "local-exec" {
-    command = "D:\\_playground\\path2DevOps_IaC\\environment\\Get-Values.ps1 -pip ${azurerm_public_ip.example.ip_address} -rg ${azurerm_resource_group.env_rg.name}"
+    command = "D:\\_playground\\path2DevOps_IaC\\environment\\Get-Values.ps1 -pip ${azurerm_public_ip.example.ip_address} -rg ${azurerm_resource_group.env_rg.name} -subID ${azurerm_subscription.current.id} -dns ${azurerm_dns_zone.env_dns.name} -miID ${azurerm_user_assigned_identity.cert_manager.client_id}"
     interpreter = ["PowerShell"]
   }
 
   depends_on = [ 
     azurerm_public_ip.example,
     azurerm_resource_group.env_rg
+  ]
+}
+
+resource "azurerm_user_assigned_identity" "cert_manager" {
+  location            = azurerm_resource_group.env_rg.location
+  name                = "cert-manager-mi"
+  resource_group_name = azurerm_kubernetes_cluster.env_aks.node_resource_group
+}
+
+resource null_resource "cert_manager_oidc" {
+  provisioner "local-exec" {
+    command = "D:\\_playground\\path2DevOps_IaC\\environment\\Set-CertManOIDC.ps1 -aksName ${azurerm_kubernetes_cluster.env_aks.name} -aksRg ${azurerm_resource_group.env_rg.name} -aksResourcesRg ${azurerm_kubernetes_cluster.env_aks.node_resource_group} -miName ${azurerm_user_assigned_identity.cert_manager.name} -dnsZone ${azurerm_dns_zone.env_dns.name}"
+    interpreter = ["PowerShell"]
+  }
+
+  depends_on = [ 
+    azurerm_user_assigned_identity.cert_manager,
+    azurerm_kubernetes_cluster.env_aks
   ]
 }

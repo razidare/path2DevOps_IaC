@@ -1,5 +1,0 @@
-﻿controller:
-  service:
-    annotations:
-      service.beta.kubernetes.io/azure-load-balancer-resource-group: dev_rg
-    loadBalancerIP: 20.107.74.162

@@ -1,0 +1,6 @@
+﻿controller:
+  service:
+    annotations:
+      service.beta.kubernetes.io/azure-load-balancer-resource-group: dev_rg
+      service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path: /healthz
+    loadBalancerIP: 20.105.131.221

@@ -2,4 +2,5 @@ controller:
   service:
     annotations:
       service.beta.kubernetes.io/azure-load-balancer-resource-group: #{rg}#
+      service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path: /healthz
     loadBalancerIP: #{pip}#
