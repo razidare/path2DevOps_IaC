@@ -11,4 +11,4 @@ $ingressValues = Get-Content "$PSScriptRoot/../kubernetes/tpl_ingress_values.yam
 $clusterIssuer = Get-Content "$PSScriptRoot/../kubernetes/tpl_cluster_issuer.yaml"
 
 $ingressValues.replace("#{pip}#", $pip).replace("#{rg}#", $rg) | Out-File "$PSScriptRoot/../kubernetes/values_ingress_controller.yaml" -Force -Encoding utf8
-$clusterIssuer.replace("#{rg}#", $rg).replace("#{subID}#", $subID).replace("#{dns}#", $dns).replace("#{miID}#", $miID)| Out-File "$PSScriptRoot/../kubernetes/cluster_issuer.yaml" -Force -Encoding utf8
+$clusterIssuer.replace("#{email}#", $email).replace("#{rg}#", $rg).replace("#{subID}#", $subID).replace("#{dns}#", $dns).replace("#{miID}#", $miID)| Out-File "$PSScriptRoot/../kubernetes/cluster_issuer.yaml" -Force -Encoding utf8

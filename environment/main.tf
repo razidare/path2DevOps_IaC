@@ -113,7 +113,7 @@ resource "azurerm_mysql_database" "example" {
 
 resource null_resource "ingress_values" {
   provisioner "local-exec" {
-    command = "D:\\_playground\\path2DevOps_IaC\\environment\\Get-Values.ps1 -pip ${azurerm_public_ip.example.ip_address} -rg ${azurerm_resource_group.env_rg.name} -subID ${azurerm_subscription.current.id} -dns ${azurerm_dns_zone.env_dns.name} -miID ${azurerm_user_assigned_identity.cert_manager.client_id}"
+    command = "D:\\_playground\\path2DevOps_IaC\\environment\\Get-Values.ps1 -pip ${azurerm_public_ip.example.ip_address} -rg ${azurerm_resource_group.env_rg.name} -subID ${data.azurerm_subscription.current.id} -dns ${azurerm_dns_zone.env_dns.name} -miID ${azurerm_user_assigned_identity.cert_manager.client_id}"
     interpreter = ["PowerShell"]
   }
 

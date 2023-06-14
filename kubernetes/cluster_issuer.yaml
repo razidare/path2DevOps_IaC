@@ -1,0 +1,19 @@
+﻿apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-production
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: radu.m.zidarescu@hotmail.com
+    privateKeySecretRef:
+      name: letsencrypt-production
+    solvers:
+    - dns01:
+        azureDNS:
+          resourceGroupName: dev_rg
+          subscriptionID: /subscriptions/f0f8e308-eb18-4d69-8467-417529d7a728
+          hostedZoneName: dev.barbart.shikki.ro
+          environment: AzurePublicCloud
+          managedIdentity:
+            clientID: cb99fb59-7162-4457-b7db-5259160494cd

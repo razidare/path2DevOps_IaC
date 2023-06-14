@@ -58,7 +58,7 @@ switch ($action) {
 
         Pop-Location
 
-        move to global folder and run tf commands
+        #move to global folder and run tf commands
         Push-Location $globalFolder
         Write-Verbose "Running Inside $globalFolder - Command is DESTROY" -vb
         terraform init
